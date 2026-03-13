@@ -20,8 +20,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
-
+flutter_icons:
+  android:true
+  ios:true
+  image_path:"assets/images/ing_logo.png"
 flutter:
 
   uses-material-design: true
@@ -31,14 +35,11 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   fonts:
-    - family: Schyler
+    - family: Segoe UI
       fonts:
-        - asset: fonts/Schyler-Regular.ttf
-        - asset: fonts/Schyler-Italic.ttf
-          style: italic
-    - family: Trajan Pro
+        - asset: fonts/Segoe-UI-Bold.ttf
+        - asset: fonts/Segoe-UI.ttf
+    - family: Billabong
       fonts:
-        - asset: fonts/TrajanPro.ttf
-        - asset: fonts/TrajanPro_Bold.ttf
-          weight: 700
+        - asset: fonts/Billabong.ttf
   
