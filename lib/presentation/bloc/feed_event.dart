@@ -1,4 +1,9 @@
-part of 'feed_bloc.dart';
+abstract class FeedEvent {}
 
-@immutable
-sealed class FeedEvent {}
+class LoadInitialFeed extends FeedEvent {}
+class LoadMorePosts extends FeedEvent {}
+class TogglePostAction extends FeedEvent {
+  final String postId;
+  final bool isLike; // true for Like, false for Save
+  TogglePostAction(this.postId, this.isLike);
+}
