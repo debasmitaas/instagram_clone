@@ -1,10 +1,16 @@
+// lib/presentation/widgets/post_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../domain/models/post.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
 import 'pinch_to_zoom_image.dart';
+
+// Global notifier to lock all scroll views instantly
+final ValueNotifier<bool> globalPinchNotifier = ValueNotifier<bool>(false);
+int globalPointers = 0;
 
 class PostWidget extends StatefulWidget {
   final Post post;
@@ -23,6 +29,15 @@ class _PostWidgetState extends State<PostWidget> {
       duration: const Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
     ));
+  }
+
+  void _updatePointers(int change) {
+    globalPointers += change;
+    if (globalPointers >= 2) {
+      if (!globalPinchNotifier.value) globalPinchNotifier.value = true;
+    } else {
+      if (globalPinchNotifier.value) globalPinchNotifier.value = false;
+    }
   }
 
   @override
@@ -46,12 +61,26 @@ class _PostWidgetState extends State<PostWidget> {
         Stack(
           alignment: Alignment.topRight,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: PageView.builder(
-                itemCount: widget.post.images.length,
-                onPageChanged: (index) => setState(() => _currentImageIndex = index),
-                itemBuilder: (context, index) => PinchToZoomImage(imageUrl: widget.post.images[index]),
+            Listener(
+              onPointerDown: (_) => _updatePointers(1),
+              onPointerUp: (_) => _updatePointers(-1),
+              onPointerCancel: (_) => _updatePointers(-1),
+              child: AspectRatio(
+                aspectRatio: 1, // Change to 0.75 if you prefer a taller 3:4 post
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: globalPinchNotifier,
+                  builder: (context, isPinching, child) {
+                    return PageView.builder(
+                      // THE LOGICAL FIX: Disable sideways swipe instantly
+                      physics: isPinching 
+                          ? const NeverScrollableScrollPhysics() 
+                          : const PageScrollPhysics(),
+                      itemCount: widget.post.images.length,
+                      onPageChanged: (index) => setState(() => _currentImageIndex = index),
+                      itemBuilder: (context, index) => PinchToZoomImage(imageUrl: widget.post.images[index]),
+                    );
+                  },
+                ),
               ),
             ),
             if (widget.post.images.length > 1)
@@ -63,7 +92,7 @@ class _PostWidgetState extends State<PostWidget> {
               ),
           ],
         ),
-
+        
         // Post Actions
         Row(
           children: [
@@ -71,7 +100,7 @@ class _PostWidgetState extends State<PostWidget> {
               icon: Icon(widget.post.isLiked ? Icons.favorite : Icons.favorite_border, color: widget.post.isLiked ? Colors.red : Colors.white),
               onPressed: () => bloc.add(TogglePostAction(widget.post.id, true)),
             ),
-            IconButton(icon: const Icon(Icons.chat_bubble_outline, color: Colors.white), onPressed: () => _showSnack(context, 'Comments clicked')),
+            IconButton(icon: const FaIcon(FontAwesomeIcons.message, color: Colors.white), onPressed: () => _showSnack(context, 'Comments clicked')),
             IconButton(icon: const Icon(Icons.send_outlined, color: Colors.white), onPressed: () => _showSnack(context, 'Share clicked')),
             
             // Carousel Dot Indicators
@@ -90,6 +119,7 @@ class _PostWidgetState extends State<PostWidget> {
             else const Spacer(),
             
             IconButton(
+              padding: EdgeInsets.zero,
               icon: Icon(widget.post.isSaved ? Icons.bookmark : Icons.bookmark_border, color: Colors.white),
               onPressed: () => bloc.add(TogglePostAction(widget.post.id, false)),
             ),

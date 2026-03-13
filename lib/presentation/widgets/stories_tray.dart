@@ -17,7 +17,7 @@ class StoriesTray extends StatelessWidget {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(3),
+                padding: const EdgeInsets.all(2.5),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle, 
                   gradient: LinearGradient(
@@ -34,7 +34,7 @@ class StoriesTray extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               Text(i == 0 ? 'Your story' : 'user_$i', style: const TextStyle(fontSize: 12, color: Colors.white)),
             ],
           ),

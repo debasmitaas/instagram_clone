@@ -1,7 +1,7 @@
+// lib/presentation/screens/feed_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
 import '../bloc/feed_state.dart';
@@ -25,8 +25,6 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   void _onScroll() {
-    // Standard screen height roughly accounts for 1.5 posts. 
-    // Triggering when maxScrollExtent - currentPixels is less than ~1500px triggers it ~2 posts early.
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 1500) {
       context.read<FeedBloc>().add(LoadMorePosts());
     }
@@ -44,7 +42,7 @@ class _FeedScreenState extends State<FeedScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text('Instagram', style: GoogleFonts.grandHotel(fontSize: 34, color: Colors.white)),
+        title: const Text('Instagram', style: TextStyle(fontFamily: 'Billabong', fontSize: 38, color: Colors.white)),
         actions: [
           IconButton(icon: const Icon(Icons.favorite_border, color: Colors.white), onPressed: () {}),
           IconButton(icon: const Icon(Icons.chat_bubble_outline, color: Colors.white), onPressed: () {}),
@@ -56,17 +54,26 @@ class _FeedScreenState extends State<FeedScreen> {
           
           return RefreshIndicator(
             onRefresh: () async => context.read<FeedBloc>().add(LoadInitialFeed()),
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: state.posts.length + 2, // 1 for stories, 1 for bottom loader
-              itemBuilder: (ctx, i) {
-                if (i == 0) return const StoriesTray();
-                if (i == state.posts.length + 1) {
-                  return state.isFetchingMore
-                      ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
-                      : const SizedBox.shrink();
-                }
-                return PostWidget(post: state.posts[i - 1]);
+            child: ValueListenableBuilder<bool>(
+              valueListenable: globalPinchNotifier,
+              builder: (context, isPinching, child) {
+                return ListView.builder(
+                  controller: _scrollController,
+                  // THE SECOND LOGICAL FIX: Disable vertical scroll and refresh instantly
+                  physics: isPinching 
+                      ? const NeverScrollableScrollPhysics() 
+                      : const AlwaysScrollableScrollPhysics(),
+                  itemCount: state.posts.length + 2, 
+                  itemBuilder: (ctx, i) {
+                    if (i == 0) return const StoriesTray();
+                    if (i == state.posts.length + 1) {
+                      return state.isFetchingMore
+                          ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
+                          : const SizedBox.shrink();
+                    }
+                    return PostWidget(post: state.posts[i - 1]);
+                  },
+                );
               },
             ),
           );

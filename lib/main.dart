@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:instagram_clone/config/app_theme.dart';
 import 'domain/repositories/post_repository.dart';
 import 'presentation/bloc/feed_bloc.dart';
 import 'presentation/bloc/feed_event.dart';
@@ -17,9 +18,7 @@ class InstaCloneApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Instagram Clone',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black,
-      ),
+      theme: AppTheme.darkTheme, // Use the dark theme defined in AppTheme)
       home: BlocProvider(
         create: (_) => FeedBloc(PostRepository())..add(LoadInitialFeed()),
         child: const FeedScreen(),
