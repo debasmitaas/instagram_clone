@@ -34,7 +34,6 @@ class _PostWidgetState extends State<PostWidget>
       duration: const Duration(milliseconds: 400),
     );
 
-    // Rubber-band bounce: pop out → overshoot down → settle
     _smallHeartScale = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(begin: 1.0, end: 1.4)
@@ -78,22 +77,19 @@ class _PostWidgetState extends State<PostWidget>
     if (!widget.post.isLiked || !isDoubleTap) {
       bloc.add(TogglePostAction(widget.post.id, true));
     }
-    // Bounce the button on every like action — double-tap OR button press
+    // heart animation
     _smallHeartController.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<FeedBloc>();
-    // FIX: Use screen width to compute image height at Instagram's 4:5 ratio.
-    // This prevents the shimmer/placeholder from reserving wrong height,
-    // eliminating the black gap that appeared before the image loaded.
     final imageHeight = MediaQuery.of(context).size.width * (5 / 4);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Header ────────────────────────────────────────────
+        // Header
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
           leading: CircleAvatar(
@@ -108,7 +104,7 @@ class _PostWidgetState extends State<PostWidget>
           trailing: const Icon(Icons.more_vert, color: Colors.white),
         ),
 
-        // ── Carousel ──────────────────────────────────────────
+        //Carousel
         Stack(
           children: [
             SizedBox(
@@ -130,7 +126,7 @@ class _PostWidgetState extends State<PostWidget>
               ),
             ),
 
-            // Image counter pill (top-right)
+            // Image counter pill
             if (widget.post.images.length > 1)
               Positioned(
                 top: 12,
@@ -154,7 +150,7 @@ class _PostWidgetState extends State<PostWidget>
 
         const SizedBox(height: 10),
 
-        // ── Dot indicators ────────────────────────────────────
+        //Dot indicators
         if (widget.post.images.length > 1)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
