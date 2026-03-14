@@ -21,7 +21,7 @@ class FeedDropdownMenu {
           ),
         );
       },
-      pageBuilder: (context, _, __) {
+      pageBuilder: (context, _, _) {
         return SafeArea(
           child: Align(
             // Sits just below the appbar, horizontally centered
