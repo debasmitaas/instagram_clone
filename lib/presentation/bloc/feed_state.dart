@@ -1,4 +1,6 @@
+// lib/presentation/bloc/feed_state.dart
 import '../../domain/models/post.dart';
+import '../../domain/models/user.dart';
 
 class FeedState {
   final List<Post> posts;
@@ -6,6 +8,7 @@ class FeedState {
   final bool isFetchingMore;
   final int currentPage;
   final bool hasReachedMax;
+  final User? currentUser;
 
   FeedState({
     required this.posts,
@@ -13,6 +16,7 @@ class FeedState {
     this.isFetchingMore = false,
     this.currentPage = 0,
     this.hasReachedMax = false,
+    this.currentUser,
   });
 
   FeedState copyWith({
@@ -21,6 +25,7 @@ class FeedState {
     bool? isFetchingMore,
     int? currentPage,
     bool? hasReachedMax,
+    User? currentUser,
   }) {
     return FeedState(
       posts: posts ?? this.posts,
@@ -28,6 +33,7 @@ class FeedState {
       isFetchingMore: isFetchingMore ?? this.isFetchingMore,
       currentPage: currentPage ?? this.currentPage,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      currentUser: currentUser ?? this.currentUser,
     );
   }
 }

@@ -1,6 +1,7 @@
 // lib/presentation/screens/feed_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:instagram_clone/presentation/widgets/profile_avatar.dart';
 import 'package:shimmer/shimmer.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
@@ -38,77 +39,84 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-           appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0.5,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.add, color: Colors.white),
-          onPressed: () {},
-        ),
-        title: const Text(
-          'Instagram',
-          style: TextStyle(
-            fontFamily: 'Billabong',
-            fontSize: 38,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.white),
-            onPressed: () {},
-          )
-        ],
-      ),
-      body: BlocBuilder<FeedBloc, FeedState>(
-        builder: (context, state) {
-          if (state.isLoadingInitial) return _buildShimmer();
-          
-          return RefreshIndicator(
-            onRefresh: () async => context.read<FeedBloc>().add(LoadInitialFeed()),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: globalPinchNotifier,
-              builder: (context, isPinching, child) {
-                return ListView.builder(
-                  controller: _scrollController,
-                  // THE SECOND LOGICAL FIX: Disable vertical scroll and refresh instantly
-                  physics: isPinching 
-                      ? const NeverScrollableScrollPhysics() 
-                      : const AlwaysScrollableScrollPhysics(),
-                  itemCount: state.posts.length + 2, 
-                  itemBuilder: (ctx, i) {
-                    if (i == 0) return const StoriesTray();
-                    if (i == state.posts.length + 1) {
-                      return state.isFetchingMore
-                          ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
-                          : const SizedBox.shrink();
-                    }
-                    return PostWidget(post: state.posts[i - 1]);
-                  },
-                );
-              },
+    return BlocBuilder<FeedBloc, FeedState>(
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            elevation: 0.5,
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.add, color: Colors.white),
+              onPressed: () {},
             ),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white54,
-        type: BottomNavigationBarType.fixed,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.search, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.add_box_outlined, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.video_library_outlined, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline, size: 28), label: ''),
-        ],
-      ),
+            title: const Text(
+              'Instagram',
+              style: TextStyle(
+                fontFamily: 'Billabong',
+                fontSize: 38,
+                color: Colors.white,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.favorite_border, color: Colors.white),
+                onPressed: () {},
+              )
+            ],
+          ),
+          body: state.isLoadingInitial
+              ? _buildShimmer()
+              : RefreshIndicator(
+                  onRefresh: () async => context.read<FeedBloc>().add(LoadInitialFeed()),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: globalPinchNotifier,
+                    builder: (context, isPinching, child) {
+                      return ListView.builder(
+                        controller: _scrollController,
+                        physics: isPinching 
+                            ? const NeverScrollableScrollPhysics() 
+                            : const AlwaysScrollableScrollPhysics(),
+                        itemCount: state.posts.length + 2, 
+                        itemBuilder: (ctx, i) {
+                          if (i == 0) return const StoriesTray();
+                          if (i == state.posts.length + 1) {
+                            return state.isFetchingMore
+                                ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
+                                : const SizedBox.shrink();
+                          }
+                          return PostWidget(post: state.posts[i - 1]);
+                        },
+                      );
+                    },
+                  ),
+                ),
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: Colors.black,
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.white54,
+            type: BottomNavigationBarType.fixed,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            items: [
+              const BottomNavigationBarItem(icon: Icon(Icons.home, size: 28), label: ''),
+              const BottomNavigationBarItem(icon: Icon(Icons.search, size: 28), label: ''),
+              const BottomNavigationBarItem(icon: Icon(Icons.add_box_outlined, size: 28), label: ''),
+              const BottomNavigationBarItem(icon: Icon(Icons.video_library_outlined, size: 28), label: ''),
+              BottomNavigationBarItem(
+                icon: state.currentUser != null
+                    ? ProfileAvatar(
+                        userImageUrl: state.currentUser!.profileImageUrl,
+                        radius: 12,
+                      )
+                    : const Icon(Icons.person_outline, size: 28, color: Colors.white54),
+                label: '',
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
