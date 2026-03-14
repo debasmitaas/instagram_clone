@@ -1,6 +1,7 @@
 // lib/presentation/screens/feed_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:instagram_clone/presentation/widgets/profile_avatar.dart';
 import 'package:shimmer/shimmer.dart';
 import '../bloc/feed_bloc.dart';
@@ -43,55 +44,71 @@ class _FeedScreenState extends State<FeedScreen> {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            elevation: 0.5,
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.add, color: Colors.white),
-              onPressed: () {},
-            ),
-            title: const Text(
-              'Instagram',
-              style: TextStyle(
-                fontFamily: 'Billabong',
-                fontSize: 38,
-                color: Colors.white,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.favorite_border, color: Colors.white),
-                onPressed: () {},
-              )
-            ],
-          ),
-          body: state.isLoadingInitial
-              ? _buildShimmer()
-              : RefreshIndicator(
-                  onRefresh: () async => context.read<FeedBloc>().add(LoadInitialFeed()),
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: globalPinchNotifier,
-                    builder: (context, isPinching, child) {
-                      return ListView.builder(
-                        controller: _scrollController,
-                        physics: isPinching 
-                            ? const NeverScrollableScrollPhysics() 
-                            : const AlwaysScrollableScrollPhysics(),
-                        itemCount: state.posts.length + 2, 
-                        itemBuilder: (ctx, i) {
-                          if (i == 0) return const StoriesTray();
-                          if (i == state.posts.length + 1) {
-                            return state.isFetchingMore
-                                ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
-                                : const SizedBox.shrink();
-                          }
-                          return PostWidget(post: state.posts[i - 1]);
-                        },
-                      );
-                    },
+          body: SafeArea(
+            child: state.isLoadingInitial
+                ? _buildShimmer()
+                : CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      // SCROLLABLE APPBAR
+                      SliverAppBar(
+                        backgroundColor: Colors.black,
+                        elevation: 0.5,
+                        pinned: false, // Set to false to make it scroll away
+                        centerTitle: true,
+                        leading: IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.plus, color: Colors.white),
+                          onPressed: () {},
+                        ),
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Instagram',
+                              style: TextStyle(
+                                fontFamily: 'Billabong',
+                                fontSize: 38,
+                                color: Colors.white,
+                              ),
+                            ),
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: FaIcon(
+                                FontAwesomeIcons.angleDown,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          IconButton(
+                            icon: const FaIcon(FontAwesomeIcons.heart, color: Colors.white),
+                            onPressed: () {},
+                          )
+                        ],
+                      ),
+                      // FEED CONTENT
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            if (index == 0) return const StoriesTray();
+                            if (index == state.posts.length + 1) {
+                              return state.isFetchingMore
+                                  ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
+                                  : const SizedBox.shrink();
+                            }
+                            return PostWidget(post: state.posts[index - 1]);
+                          },
+                          childCount: state.posts.length + 2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+          ),
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.black,
             selectedItemColor: Colors.white,

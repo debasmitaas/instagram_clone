@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../domain/models/post.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
@@ -144,26 +145,31 @@ class _PostWidgetState extends State<PostWidget> {
         Row(
           children: [
             IconButton(
-              icon: Icon(
-                widget.post.isLiked ? Icons.favorite : Icons.favorite_border,
+              icon: FaIcon(
+                widget.post.isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
                 color: widget.post.isLiked ? Colors.red : Colors.white,
               ),
               onPressed: () => bloc.add(TogglePostAction(widget.post.id, true)),
             ),
             IconButton(
-              icon: const FaIcon(FontAwesomeIcons.message, color: Colors.white),
+              icon: FaIcon(FontAwesomeIcons.comment, color: Colors.white),
               onPressed: () => _showSnack(context, 'Comments clicked'),
             ),
             IconButton(
-              icon: const Icon(Icons.send_outlined, color: Colors.white),
+              icon: const HugeIcon(icon:HugeIcons.strokeRoundedRepeat, color: Colors.white , strokeWidth: 2),
+              onPressed: () => _showSnack(context, 'Repost clicked'),
+            ),
+            IconButton(
+              icon: const HugeIcon(icon:HugeIcons.strokeRoundedSent, color: Colors.white , strokeWidth: 2),
               onPressed: () => _showSnack(context, 'Share clicked'),
             ),
-            const SizedBox(width: 190),
+            
+            const SizedBox(width: 140),
 
             IconButton(
               padding: EdgeInsets.zero,
-              icon: Icon(
-                widget.post.isSaved ? Icons.bookmark : Icons.bookmark_border,
+              icon: FaIcon(
+                widget.post.isSaved ? FontAwesomeIcons.solidBookmark : FontAwesomeIcons.bookmark,
                 color: Colors.white,
               ),
               onPressed: () =>
