@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:instagram_clone/presentation/widgets/feed_dropdown_menu.dart';
 import 'package:instagram_clone/presentation/widgets/post_widget.dart';
 import 'package:instagram_clone/presentation/widgets/profile_avatar.dart';
 import 'package:shimmer/shimmer.dart';
@@ -80,7 +81,7 @@ class _FeedScreenState extends State<FeedScreen> {
                                 color: Colors.white,
                                 size: 14,
                               ),
-                              onPressed: () {},
+                              onPressed: ()=> FeedDropdownMenu.show(context),
                             ),
                           ],
                         ),
