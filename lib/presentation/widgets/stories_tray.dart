@@ -7,7 +7,7 @@ class StoriesTray extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 105,
+      height: 130,
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey[900]!, width: 0.5))),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -27,9 +27,9 @@ class StoriesTray extends StatelessWidget {
                   )
                 ),
                 child: CircleAvatar(
-                  radius: 30, backgroundColor: Colors.black,
+                  radius: 35, backgroundColor: Colors.black,
                   child: CircleAvatar(
-                    radius: 28,
+                    radius: 33,
                     backgroundImage: CachedNetworkImageProvider('https://picsum.photos/seed/story$i/100'),
                   ),
                 ),
