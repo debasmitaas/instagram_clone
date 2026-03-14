@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:instagram_clone/presentation/widgets/post_widget.dart';
 import 'package:instagram_clone/presentation/widgets/profile_avatar.dart';
 import 'package:shimmer/shimmer.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
 import '../bloc/feed_state.dart';
-import '../widgets/post_widget.dart';
 import '../widgets/stories_tray.dart';
 
 class FeedScreen extends StatefulWidget {

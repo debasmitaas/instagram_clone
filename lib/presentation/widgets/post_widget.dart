@@ -7,11 +7,8 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../domain/models/post.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
+import 'double_tap_like_wrapper.dart';
 import 'pinch_to_zoom_image.dart';
-
-// Global notifier to lock all scroll views instantly
-final ValueNotifier<bool> globalPinchNotifier = ValueNotifier<bool>(false);
-int globalPointers = 0;
 
 class PostWidget extends StatefulWidget {
   final Post post;
@@ -21,35 +18,82 @@ class PostWidget extends StatefulWidget {
   State<PostWidget> createState() => _PostWidgetState();
 }
 
-class _PostWidgetState extends State<PostWidget> {
+class _PostWidgetState extends State<PostWidget>
+    with SingleTickerProviderStateMixin {
   int _currentImageIndex = 0;
 
-  void _showSnack(BuildContext ctx, String msg) {
-    ScaffoldMessenger.of(ctx).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
+  late AnimationController _smallHeartController;
+  late Animation<double> _smallHeartScale;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _smallHeartController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
     );
+
+    // Rubber-band bounce: pop out → overshoot down → settle
+    _smallHeartScale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 1.4)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 25,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.4, end: 0.85)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 35,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.85, end: 1.1)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 20,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.1, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 20,
+      ),
+    ]).animate(_smallHeartController);
   }
 
-  void _updatePointers(int change) {
-    globalPointers += change;
-    if (globalPointers >= 2) {
-      if (!globalPinchNotifier.value) globalPinchNotifier.value = true;
-    } else {
-      if (globalPinchNotifier.value) globalPinchNotifier.value = false;
+  @override
+  void dispose() {
+    _smallHeartController.dispose();
+    super.dispose();
+  }
+
+  void _showSnack(BuildContext ctx, String msg) {
+    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+      content: Text(msg),
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
+
+  void _handleLikeAction(BuildContext context, {bool isDoubleTap = false}) {
+    final bloc = context.read<FeedBloc>();
+    if (!widget.post.isLiked || !isDoubleTap) {
+      bloc.add(TogglePostAction(widget.post.id, true));
     }
+    // Bounce the button on every like action — double-tap OR button press
+    _smallHeartController.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<FeedBloc>();
+    // FIX: Use screen width to compute image height at Instagram's 4:5 ratio.
+    // This prevents the shimmer/placeholder from reserving wrong height,
+    // eliminating the black gap that appeared before the image loaded.
+    final imageHeight = MediaQuery.of(context).size.width * (5 / 4);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Post Header
+        // ── Header ────────────────────────────────────────────
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
           leading: CircleAvatar(
@@ -59,117 +103,121 @@ class _PostWidgetState extends State<PostWidget> {
           title: Text(
             widget.post.username,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+                fontWeight: FontWeight.bold, color: Colors.white),
           ),
           trailing: const Icon(Icons.more_vert, color: Colors.white),
         ),
 
-        // Post Carousel
+        // ── Carousel ──────────────────────────────────────────
         Stack(
-          alignment: Alignment.topRight,
           children: [
-            Listener(
-              onPointerDown: (_) => _updatePointers(1),
-              onPointerUp: (_) => _updatePointers(-1),
-              onPointerCancel: (_) => _updatePointers(-1),
-              child: AspectRatio(
-                aspectRatio:
-                    0.75, //Changed as modern ig aspect ration is 3:4
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: globalPinchNotifier,
-                  builder: (context, isPinching, child) {
-                    return PageView.builder(
-                      physics: isPinching
-                          ? const NeverScrollableScrollPhysics()
-                          : const PageScrollPhysics(),
-                      itemCount: widget.post.images.length,
-                      onPageChanged: (index) =>
-                          setState(() => _currentImageIndex = index),
-                      itemBuilder: (context, index) =>
-                          PinchToZoomImage(imageUrl: widget.post.images[index]),
-                    );
-                  },
-                ),
+            SizedBox(
+              height: imageHeight,
+              child: PageView.builder(
+                physics: const PageScrollPhysics(),
+                itemCount: widget.post.images.length,
+                onPageChanged: (index) =>
+                    setState(() => _currentImageIndex = index),
+                itemBuilder: (context, index) {
+                  return DoubleTapLikeWrapper(
+                    onLike: () =>
+                        _handleLikeAction(context, isDoubleTap: true),
+                    child: PinchToZoomImage(
+                      imageUrl: widget.post.images[index],
+                    ),
+                  );
+                },
               ),
             ),
-            if (widget.post.images.length > 1)
-              Container(
-                margin: const EdgeInsets.all(12),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${_currentImageIndex + 1}/${widget.post.images.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 10),
 
-        Row(
-          children: [
-            // Carousel Dot Indicators
+            // Image counter pill (top-right)
             if (widget.post.images.length > 1)
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    widget.post.images.length,
-                    (index) => Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      width: _currentImageIndex == index ? 6 : 4,
-                      height: _currentImageIndex == index ? 6 : 4,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _currentImageIndex == index
-                            ? Color(0xFFAE44FD)
-                            : Colors.grey,
-                      ),
-                    ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${_currentImageIndex + 1}/${widget.post.images.length}',
+                    style:
+                        const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-              )
-            else
-              const Spacer(),
+              ),
           ],
         ),
-        // Post Actions
+
+        const SizedBox(height: 10),
+
+        // ── Dot indicators ────────────────────────────────────
+        if (widget.post.images.length > 1)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.post.images.length,
+              (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: _currentImageIndex == index ? 6 : 4,
+                height: _currentImageIndex == index ? 6 : 4,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentImageIndex == index
+                      ? const Color(0xFFAE44FD)
+                      : Colors.grey,
+                ),
+              ),
+            ),
+          ),
+
+        // ── Action buttons ────────────────────────────────────
         Row(
           children: [
-            IconButton(
-              icon: FaIcon(
-                widget.post.isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
-                color: widget.post.isLiked ? Colors.red : Colors.white,
+            ScaleTransition(
+              scale: _smallHeartScale,
+              child: IconButton(
+                icon: FaIcon(
+                  widget.post.isLiked
+                      ? FontAwesomeIcons.solidHeart
+                      : FontAwesomeIcons.heart,
+                  color: widget.post.isLiked ? Colors.red : Colors.white,
+                ),
+                onPressed: () =>
+                    _handleLikeAction(context, isDoubleTap: false),
               ),
-              onPressed: () => bloc.add(TogglePostAction(widget.post.id, true)),
             ),
             IconButton(
-              icon: FaIcon(FontAwesomeIcons.comment, color: Colors.white),
+              icon: const FaIcon(FontAwesomeIcons.comment, color: Colors.white),
               onPressed: () => _showSnack(context, 'Comments clicked'),
             ),
             IconButton(
-              icon: const HugeIcon(icon:HugeIcons.strokeRoundedRepeat, color: Colors.white , strokeWidth: 2),
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedRepeat,
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
               onPressed: () => _showSnack(context, 'Repost clicked'),
             ),
             IconButton(
-              icon: const HugeIcon(icon:HugeIcons.strokeRoundedSent, color: Colors.white , strokeWidth: 2),
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedSent,
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
               onPressed: () => _showSnack(context, 'Share clicked'),
             ),
-            
-            const SizedBox(width: 140),
-
+            const Spacer(),
             IconButton(
               padding: EdgeInsets.zero,
               icon: FaIcon(
-                widget.post.isSaved ? FontAwesomeIcons.solidBookmark : FontAwesomeIcons.bookmark,
+                widget.post.isSaved
+                    ? FontAwesomeIcons.solidBookmark
+                    : FontAwesomeIcons.bookmark,
                 color: Colors.white,
               ),
               onPressed: () =>
@@ -178,7 +226,7 @@ class _PostWidgetState extends State<PostWidget> {
           ],
         ),
 
-        // Caption
+        // ── Caption ───────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: Text.rich(
@@ -187,9 +235,7 @@ class _PostWidgetState extends State<PostWidget> {
                 TextSpan(
                   text: '${widget.post.username} ',
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                      fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 TextSpan(
                   text: widget.post.caption,
