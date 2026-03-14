@@ -40,12 +40,27 @@ class _FeedScreenState extends State<FeedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
+           appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Instagram', style: TextStyle(fontFamily: 'Billabong', fontSize: 38, color: Colors.white)),
+        elevation: 0.5,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.add, color: Colors.white),
+          onPressed: () {},
+        ),
+        title: const Text(
+          'Instagram',
+          style: TextStyle(
+            fontFamily: 'Billabong',
+            fontSize: 38,
+            color: Colors.white,
+          ),
+        ),
         actions: [
-          IconButton(icon: const Icon(Icons.favorite_border, color: Colors.white), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.chat_bubble_outline, color: Colors.white), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: Colors.white),
+            onPressed: () {},
+          )
         ],
       ),
       body: BlocBuilder<FeedBloc, FeedState>(
