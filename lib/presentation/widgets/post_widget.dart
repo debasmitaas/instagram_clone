@@ -18,8 +18,7 @@ class PostWidget extends StatefulWidget {
   State<PostWidget> createState() => _PostWidgetState();
 }
 
-class _PostWidgetState extends State<PostWidget>
-    with SingleTickerProviderStateMixin {
+class _PostWidgetState extends State<PostWidget> with SingleTickerProviderStateMixin {
   int _currentImageIndex = 0;
 
   late AnimationController _smallHeartController;
@@ -35,26 +34,10 @@ class _PostWidgetState extends State<PostWidget>
     );
 
     _smallHeartScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 1.4)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 25,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.4, end: 0.85)
-            .chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 35,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 0.85, end: 1.1)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 20,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.1, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 20,
-      ),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 25),
+      TweenSequenceItem(tween: Tween(begin: 1.4, end: 0.85).chain(CurveTween(curve: Curves.easeInOut)), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.1).chain(CurveTween(curve: Curves.easeOut)), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0).chain(CurveTween(curve: Curves.easeIn)), weight: 20),
     ]).animate(_smallHeartController);
   }
 
@@ -65,11 +48,7 @@ class _PostWidgetState extends State<PostWidget>
   }
 
   void _showSnack(BuildContext ctx, String msg) {
-    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-      content: Text(msg),
-      duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-    ));
+    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 2), behavior: SnackBarBehavior.floating));
   }
 
   void _handleLikeAction(BuildContext context, {bool isDoubleTap = false}) {
@@ -77,7 +56,6 @@ class _PostWidgetState extends State<PostWidget>
     if (!widget.post.isLiked || !isDoubleTap) {
       bloc.add(TogglePostAction(widget.post.id, true));
     }
-    // heart animation
     _smallHeartController.forward(from: 0.0);
   }
 
@@ -98,8 +76,7 @@ class _PostWidgetState extends State<PostWidget>
           ),
           title: Text(
             widget.post.username,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           trailing: const Icon(Icons.more_vert, color: Colors.white),
         ),
@@ -107,23 +84,27 @@ class _PostWidgetState extends State<PostWidget>
         //Carousel
         Stack(
           children: [
-            SizedBox(
-              height: imageHeight,
-              child: PageView.builder(
-                physics: const PageScrollPhysics(),
-                itemCount: widget.post.images.length,
-                onPageChanged: (index) =>
-                    setState(() => _currentImageIndex = index),
-                itemBuilder: (context, index) {
-                  return DoubleTapLikeWrapper(
-                    onLike: () =>
-                        _handleLikeAction(context, isDoubleTap: true),
-                    child: PinchToZoomImage(
-                      imageUrl: widget.post.images[index],
-                    ),
-                  );
-                },
-              ),
+            // DYNAMIC LISTENER: Locks horizontal scroll during zoom
+            ValueListenableBuilder<bool>(
+              valueListenable: globalPinchNotifier,
+              builder: (context, isPinching, child) {
+                return SizedBox(
+                  height: imageHeight,
+                  child: PageView.builder(
+                    physics: isPinching ? const NeverScrollableScrollPhysics() : const PageScrollPhysics(),
+                    itemCount: widget.post.images.length,
+                    onPageChanged: (index) => setState(() => _currentImageIndex = index),
+                    itemBuilder: (context, index) {
+                      return DoubleTapLikeWrapper(
+                        onLike: () => _handleLikeAction(context, isDoubleTap: true),
+                        child: PinchToZoomImage(
+                          imageUrl: widget.post.images[index],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
 
             // Image counter pill
@@ -132,16 +113,14 @@ class _PostWidgetState extends State<PostWidget>
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '${_currentImageIndex + 1}/${widget.post.images.length}',
-                    style:
-                        const TextStyle(color: Colors.white, fontSize: 12),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
               ),
@@ -163,80 +142,48 @@ class _PostWidgetState extends State<PostWidget>
                 height: _currentImageIndex == index ? 6 : 4,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _currentImageIndex == index
-                      ? const Color(0xFFAE44FD)
-                      : Colors.grey,
+                  color: _currentImageIndex == index ? const Color(0xFFAE44FD) : Colors.grey,
                 ),
               ),
             ),
           ),
 
-        // ── Action buttons ────────────────────────────────────
+        // Action buttons
         Row(
           children: [
             ScaleTransition(
               scale: _smallHeartScale,
               child: IconButton(
                 icon: FaIcon(
-                  widget.post.isLiked
-                      ? FontAwesomeIcons.solidHeart
-                      : FontAwesomeIcons.heart,
+                  widget.post.isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
                   color: widget.post.isLiked ? Colors.red : Colors.white,
                 ),
-                onPressed: () =>
-                    _handleLikeAction(context, isDoubleTap: false),
+                onPressed: () => _handleLikeAction(context, isDoubleTap: false),
               ),
             ),
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.comment, color: Colors.white),
-              onPressed: () => _showSnack(context, 'Comments clicked'),
-            ),
-            IconButton(
-              icon: const HugeIcon(
-                icon: HugeIcons.strokeRoundedRepeat,
-                color: Colors.white,
-                strokeWidth: 2,
-              ),
-              onPressed: () => _showSnack(context, 'Repost clicked'),
-            ),
-            IconButton(
-              icon: const HugeIcon(
-                icon: HugeIcons.strokeRoundedSent,
-                color: Colors.white,
-                strokeWidth: 2,
-              ),
-              onPressed: () => _showSnack(context, 'Share clicked'),
-            ),
+            IconButton(icon: const FaIcon(FontAwesomeIcons.comment, color: Colors.white), onPressed: () => _showSnack(context, 'Comments clicked')),
+            IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedRepeat, color: Colors.white, strokeWidth: 2), onPressed: () => _showSnack(context, 'Repost clicked')),
+            IconButton(icon: const HugeIcon(icon: HugeIcons.strokeRoundedSent, color: Colors.white, strokeWidth: 2), onPressed: () => _showSnack(context, 'Share clicked')),
             const Spacer(),
             IconButton(
               padding: EdgeInsets.zero,
               icon: FaIcon(
-                widget.post.isSaved
-                    ? FontAwesomeIcons.solidBookmark
-                    : FontAwesomeIcons.bookmark,
+                widget.post.isSaved ? FontAwesomeIcons.solidBookmark : FontAwesomeIcons.bookmark,
                 color: Colors.white,
               ),
-              onPressed: () =>
-                  bloc.add(TogglePostAction(widget.post.id, false)),
+              onPressed: () => bloc.add(TogglePostAction(widget.post.id, false)),
             ),
           ],
         ),
 
-        // ── Caption ───────────────────────────────────────────
+        // Caption
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: Text.rich(
             TextSpan(
               children: [
-                TextSpan(
-                  text: '${widget.post.username} ',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                TextSpan(
-                  text: widget.post.caption,
-                  style: const TextStyle(color: Colors.white),
-                ),
+                TextSpan(text: '${widget.post.username} ', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                TextSpan(text: widget.post.caption, style: const TextStyle(color: Colors.white)),
               ],
             ),
           ),

@@ -10,6 +10,7 @@ import '../bloc/feed_event.dart';
 import '../bloc/feed_state.dart';
 import '../widgets/stories_tray.dart';
 import '../widgets/feed_shimmer.dart';
+import '../widgets/pinch_to_zoom_image.dart'; // We import globalPinchNotifier from here!
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -48,72 +49,79 @@ class _FeedScreenState extends State<FeedScreen> {
           body: SafeArea(
             child: state.isLoadingInitial
                 ? const FeedShimmer()
-                : CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      // SCROLLABLE APPBAR
-                      SliverAppBar(
-                        backgroundColor: Colors.black,
-                        elevation: 0.5,
-                        pinned: false, // Set to false to make it scroll away
-                        centerTitle: true,
-                        leading: IconButton(
-                          icon: const FaIcon(FontAwesomeIcons.plus, color: Colors.white),
-                          onPressed: () {},
-                        ),
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'Instagram',
-                              style: TextStyle(
-                                fontFamily: 'Billabong',
-                                fontSize: 38,
-                                color: Colors.white,
-                              ),
+                // DYNAMIC LISTENER: Locks vertical scroll during zoom
+                : ValueListenableBuilder<bool>(
+                    valueListenable: globalPinchNotifier,
+                    builder: (context, isPinching, child) {
+                      return CustomScrollView(
+                        controller: _scrollController,
+                        physics: isPinching ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          // SCROLLABLE APPBAR
+                          SliverAppBar(
+                            backgroundColor: Colors.black,
+                            elevation: 0.5,
+                            pinned: false, // Set to false to make it scroll away
+                            centerTitle: true,
+                            leading: IconButton(
+                              icon: const FaIcon(FontAwesomeIcons.plus, color: Colors.white),
+                              onPressed: () {},
                             ),
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              icon: FaIcon(
-                                FontAwesomeIcons.angleDown,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                              onPressed: ()=> FeedDropdownMenu.show(context),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'Instagram',
+                                  style: TextStyle(
+                                    fontFamily: 'Billabong',
+                                    fontSize: 38,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  icon: FaIcon(
+                                    FontAwesomeIcons.angleDown,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
+                                  onPressed: ()=> FeedDropdownMenu.show(context),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        actions: [
-                          IconButton(
-                            icon: const FaIcon(FontAwesomeIcons.heart, color: Colors.white),
-                            onPressed: () {},
-                          )
+                            actions: [
+                              IconButton(
+                                icon: const FaIcon(FontAwesomeIcons.heart, color: Colors.white),
+                                onPressed: () {},
+                              )
+                            ],
+                          ),
+                          // FEED CONTENT
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                if (index == 0) return const StoriesTray();
+                                if (index == state.posts.length + 1) {
+                                  return state.isFetchingMore
+                                      ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
+                                      : const SizedBox.shrink();
+                                }
+                                return PostWidget(post: state.posts[index - 1]);
+                              },
+                              childCount: state.posts.length + 2,
+                            ),
+                          ),
                         ],
-                      ),
-                      // FEED CONTENT
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            if (index == 0) return const StoriesTray();
-                            if (index == state.posts.length + 1) {
-                              return state.isFetchingMore
-                                  ? const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Center(child: CircularProgressIndicator(color: Colors.grey)))
-                                  : const SizedBox.shrink();
-                            }
-                            return PostWidget(post: state.posts[index - 1]);
-                          },
-                          childCount: state.posts.length + 2,
-                        ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
           ),
           bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.black,
             selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.white54,
+            unselectedItemColor: const Color.fromARGB(236, 255, 255, 255),
             type: BottomNavigationBarType.fixed,
             showSelectedLabels: false,
             showUnselectedLabels: false,
