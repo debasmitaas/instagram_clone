@@ -2,9 +2,10 @@
 
 this ia an assignment project which replicates the home feed of instagram with a focus on smooth animations, custom pinch-to-zoom, and efficient state management using BLoC. 
   
-**Demo Recording:**  
+## Demo Recording:
 
----
+ https://www.youtube.com/shorts/AuaWsFqMDGc
+
 
 ## 🎥 Demo Highlights
 The demo video above showcases the following core features:
@@ -42,3 +43,6 @@ Follow these steps to run the application locally on your emulator or physical d
 4. Run the application:
     ```bash
      flutter run
+
+**Apk Installation :**
+ Install it from the release section of the repo.
