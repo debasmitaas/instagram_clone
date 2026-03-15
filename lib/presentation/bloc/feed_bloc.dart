@@ -11,53 +11,38 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
 
   FeedBloc(this.repository, this.userRepository) : super(FeedState(posts: [])) {
     on<LoadInitialFeed>((event, emit) async {
-      emit(state.copyWith(isLoadingInitial: true, errorMessage: null));
-      try {
-        final posts = await repository.fetchPosts(page: 0);
-        emit(state.copyWith(
-          posts: posts,
-          isLoadingInitial: false,
-          currentPage: 0,
-        ));
-      } catch (e) {
-        emit(state.copyWith(
-          isLoadingInitial: false, 
-          errorMessage: 'Failed to load initial feed. Please check your connection.',
-        ));
-      }
+      emit(state.copyWith(isLoadingInitial: true));
+      final posts = await repository.fetchPosts(page: 0);
+      emit(state.copyWith(
+        posts: posts,
+        isLoadingInitial: false,
+        currentPage: 0,
+      ));
     });
 
     on<LoadCurrentUser>((event, emit) async {
       try {
         final user = await userRepository.getCurrentUser();
-        emit(state.copyWith(currentUser: user, errorMessage: null));
+        emit(state.copyWith(currentUser: user));
       } catch (e) {
         print('Error loading current user: $e');
-        emit(state.copyWith(errorMessage: 'Failed to load user profile.'));
       }
     });
 
     on<LoadMorePosts>((event, emit) async {
       if (state.isFetchingMore || state.hasReachedMax) return;
-      emit(state.copyWith(isFetchingMore: true, errorMessage: null));
+      emit(state.copyWith(isFetchingMore: true));
       
-      try {
-        final nextPage = state.currentPage + 1;
-        final newPosts = await repository.fetchPosts(page: nextPage);
-        
-        if (newPosts.isEmpty) {
-          emit(state.copyWith(hasReachedMax: true, isFetchingMore: false));
-        } else {
-          emit(state.copyWith(
-            posts: List.of(state.posts)..addAll(newPosts),
-            currentPage: nextPage,
-            isFetchingMore: false,
-          ));
-        }
-      } catch (e) {
+      final nextPage = state.currentPage + 1;
+      final newPosts = await repository.fetchPosts(page: nextPage);
+      
+      if (newPosts.isEmpty) {
+        emit(state.copyWith(hasReachedMax: true, isFetchingMore: false));
+      } else {
         emit(state.copyWith(
-          isFetchingMore: false, 
-          errorMessage: 'Failed to load more posts.Tap to retry.',
+          posts: List.of(state.posts)..addAll(newPosts),
+          currentPage: nextPage,
+          isFetchingMore: false,
         ));
       }
     });

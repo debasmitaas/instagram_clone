@@ -41,29 +41,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<FeedBloc, FeedState>(
-      listener: (context, state) {
-        if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              action: SnackBarAction(
-                label: 'Retry',
-                textColor: Colors.white,
-                onPressed: () {
-                  if (state.posts.isEmpty) {
-                    context.read<FeedBloc>().add(LoadInitialFeed());
-                  } else {
-                    context.read<FeedBloc>().add(LoadMorePosts());
-                  }
-                },
-              ),
-            ),
-          );
-        }
-      },
+    return BlocBuilder<FeedBloc, FeedState>(
       builder: (context, state) {
         return Scaffold(
           backgroundColor: Colors.black,
