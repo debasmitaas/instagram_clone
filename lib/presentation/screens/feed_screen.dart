@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:instagram_clone/presentation/widgets/feed_dropdown_menu.dart';
 import 'package:instagram_clone/presentation/widgets/post_widget.dart';
 import 'package:instagram_clone/presentation/widgets/profile_avatar.dart';
@@ -126,10 +127,10 @@ class _FeedScreenState extends State<FeedScreen> {
             showSelectedLabels: false,
             showUnselectedLabels: false,
             items: [
-              const BottomNavigationBarItem(icon: Icon(Icons.home, size: 28), label: ''),
-              const BottomNavigationBarItem(icon: Icon(Icons.search, size: 28), label: ''),
-              const BottomNavigationBarItem(icon: Icon(Icons.add_box_outlined, size: 28), label: ''),
-              const BottomNavigationBarItem(icon: Icon(Icons.video_library_outlined, size: 28), label: ''),
+              const BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedHome03, color: Colors.white, strokeWidth: 2), label: ''),
+              const BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedSent, color: Colors.white, strokeWidth: 2), label: ''),
+              const BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedVideoReplay, color: Colors.white, strokeWidth: 2), label: ''),
+              const BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: Colors.white, strokeWidth: 2), label: ''),
               BottomNavigationBarItem(
                 icon: state.currentUser != null
                     ? ProfileAvatar(
