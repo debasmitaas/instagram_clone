@@ -5,11 +5,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:instagram_clone/presentation/widgets/feed_dropdown_menu.dart';
 import 'package:instagram_clone/presentation/widgets/post_widget.dart';
 import 'package:instagram_clone/presentation/widgets/profile_avatar.dart';
-import 'package:shimmer/shimmer.dart';
 import '../bloc/feed_bloc.dart';
 import '../bloc/feed_event.dart';
 import '../bloc/feed_state.dart';
 import '../widgets/stories_tray.dart';
+import '../widgets/feed_shimmer.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -41,13 +41,35 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<FeedBloc, FeedState>(
+    return BlocConsumer<FeedBloc, FeedState>(
+      listener: (context, state) {
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: () {
+                  if (state.posts.isEmpty) {
+                    context.read<FeedBloc>().add(LoadInitialFeed());
+                  } else {
+                    context.read<FeedBloc>().add(LoadMorePosts());
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         return Scaffold(
           backgroundColor: Colors.black,
           body: SafeArea(
             child: state.isLoadingInitial
-                ? _buildShimmer()
+                ? const FeedShimmer()
                 : CustomScrollView(
                     controller: _scrollController,
                     slivers: [
@@ -137,27 +159,4 @@ class _FeedScreenState extends State<FeedScreen> {
       },
     );
   }
-
-  Widget _buildShimmer() => ListView.builder(
-    itemCount: 3, 
-    itemBuilder: (_, i) => Column(
-      children: [
-        if (i == 0) const StoriesTray(),
-        Shimmer.fromColors(
-          baseColor: Colors.grey[900]!, 
-          highlightColor: Colors.grey[800]!,
-          child: Column(
-            children: [
-              ListTile(
-                leading: const CircleAvatar(),
-                title: Container(height: 10, width: 100, color: Colors.white),
-              ),
-              Container(height: 400, color: Colors.black),
-              const SizedBox(height: 50),
-            ]
-          ),
-        ),
-      ],
-    )
-  );
 }
