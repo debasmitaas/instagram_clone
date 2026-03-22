@@ -1,6 +1,6 @@
 # instagram_clone
 
-this ia an assignment project which replicates the home feed of instagram with a focus on smooth animations, custom pinch-to-zoom, and efficient state management using BLoC. 
+this is an assignment project which replicates the home feed of instagram with a focus on smooth animations, custom pinch-to-zoom, and efficient state management using BLoC. 
   
 ## Demo Recording:
 
